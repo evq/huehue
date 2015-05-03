@@ -47,5 +47,5 @@ HueApi.prototype.put = function(path, data) {
 
 // Return array of Lights
 HueApi.prototype.getLights = function() {
-  return this.get('/lights');
+  return this.get('/groups');
 };

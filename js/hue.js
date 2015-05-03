@@ -3,7 +3,7 @@ Hue = {
     api : null,
     rac : null,
     picker : null,
-    lights : {}
+    groups : {}
   },
 
   config : {
@@ -57,20 +57,20 @@ Hue = {
       });
 
       // Observers
-      Hue.__.rac.observe('lights.*.state.*', function(newValue, oldValue, keypath) {
+      Hue.__.rac.observe('groups.*.action.*', function(newValue, oldValue, keypath) {
         // keypath: "lights.0.state.bri"
         var keypathParts = keypath.split('.');
         var racId = keypathParts[1];
-        var lightId = Hue.__.rac.get( 'lights.' + racId ).id;
+        var lightId = Hue.__.rac.get( 'groups.' + racId ).id;
 
         var stateKey = keypathParts[3];
         var newState = {};
         newState[stateKey] = newValue;
-        Hue.__.lights[lightId].stateChanged(newState);
+        Hue.__.groups[lightId].stateChanged(newState);
       });
 
       Hue.__.rac.on('*.hsvChanged', function(lightId, hsv) {
-        Hue.__.lights[lightId].setHsv(hsv);
+        Hue.__.groups[lightId].setHsv(hsv);
       });
 
       // Poll for changess
@@ -90,10 +90,10 @@ Hue = {
       Hue.__.api.getLights().then(
         function(response) {
           _.each(response, function(apiLight, id) {
-            if ( Hue.__.lights[id] ) {
-              Hue.__.lights[id].sync(apiLight);
+            if ( Hue.__.groups[id] ) {
+              Hue.__.groups[id].sync(apiLight);
             } else {
-              Hue.__.lights[id] = new HueLight({
+              Hue.__.groups[id] = new HueLight({
                 api: Hue.__.api,
                 id:  id,
                 obj: apiLight,
@@ -112,9 +112,9 @@ Hue = {
     // Render lights from api response object
     renderLights: function() {
       // Turn into Array for Mustache
-      var lightList = _.values( Hue.__.lights );
+      var lightList = _.values( Hue.__.groups );
       var cloneLightList = JSON.parse( JSON.stringify(lightList) );
-      Hue.__.rac.set( 'lights', cloneLightList );
+      Hue.__.rac.set( 'groups', cloneLightList );
     }
   }
 };

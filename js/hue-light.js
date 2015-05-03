@@ -23,7 +23,7 @@ HueLight.prototype.sync = function(obj) {
   this.name      = obj.name;
   this.type      = obj.type;
   this.swversion = obj.swversion;
-  this.state     = obj.state;
+  this.action     = obj.action;
   this.pickerHsv = this.getHsv();
   this.putStateBuffer = {};
 
@@ -36,9 +36,9 @@ HueLight.prototype.sync = function(obj) {
 // HSV for ColorPicker is 0-360, 0-1, 0-1
 HueLight.prototype.getHsv = function() {
   return {
-    h: this.state.hue / (65535 / 360),
-    s: this.state.sat / 255,
-    v: this.state.bri / 255,
+    h: this.action.hue / (65535 / 360),
+    s: this.action.sat / 255,
+    v: this.action.bri / 255,
   };
 };
 
@@ -53,12 +53,12 @@ HueLight.prototype.setHsv = function(hsv) {
 };
 
 HueLight.prototype.basePath = function() {
-  return ( '/lights/' + this.id );
+  return ( '/groups/' + this.id );
 };
 
 HueLight.prototype.putState = function(state){
   var _this = this;
-  this.api.put( this.basePath() + '/state', state ).then(
+  this.api.put( this.basePath() + '/action', state ).then(
     function(apiLight) {
       _this.sync(apiLight);
     },
@@ -84,12 +84,13 @@ HueLight.prototype.flushPutStateBuffer = function() {
 
 HueLight.prototype.stateChanged = function(newState) {
   // If there's a difference, PUT to API
-  var oldState = this.state;
+  var oldState = this.action;
   var changes =
     _.pick(newState, function(newValue, key) {
       // Fun JS Fact: Array [0, 0] != Array [0, 0]
       return !( _.isEqual( oldState[key], newValue ) );
     });
+  console.log("HI");
   if ( _.size(changes) > 0 ){
     var normChanges = this.getNormState(changes);
     this.bufferedPutState(normChanges);
@@ -107,7 +108,7 @@ HueLight.prototype.getNormState = function(state) {
     // grouped attrs present
     if ( _.size(attrDiffGroupState) < _.size(attrGroup) ) {
       _.each( attrDiffGroupState, function(missingAttr) {
-        state[missingAttr] = _this.state[missingAttr];
+        state[missingAttr] = _this.action[missingAttr];
       });
     }
   });
